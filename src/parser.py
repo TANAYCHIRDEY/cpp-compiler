@@ -66,13 +66,19 @@ class Parser:
         self.tokens = tokens 
         self.pos = 0
     
+    def parse(self):
+        functions = []
+        while self.current().type != TokenType.EOF:
+            functions.append(self.parse_function())
+        return Program(functions)
+
     def current(self):
         return self.tokens[self.pos]
     
     def eat(self,token_type,value=None):
         token = self.current()
         if token.type != token_type:
-            raise SyntaxError("Expected {token_type}, got {token.type} ('{token.value}') at {token.line}")
+            raise SyntaxError(f"Expected {token_type}, got {token.type} ('{token.value}') at {token.line}")
         if value and token.value != value :
             raise SyntaxError(f"Expected '{value}', got {token.value} at line {token.line}")
         self.pos +=1
@@ -85,6 +91,7 @@ class Parser:
         params = self.parse_params()
         self.eat(TokenType.RPAREN)
         self.eat(TokenType.LBRACE)
+        body = self.parse_block()
         body=self.eat(TokenType.RBRACE)
         return FunctionDeclaration(return_type,name,params,body)
     
@@ -112,7 +119,7 @@ class Parser:
     def parse_statement(self):
         token = self.current()
 
-        if token.type == TokenType.KEYWORD and token.value in ("int","value"):
+        if token.type == TokenType.KEYWORD and token.value in ("int","void"):
             return self.parse_var_declaration()
         
         if token.type == TokenType.KEYWORD and token.value == "return":
@@ -133,7 +140,7 @@ class Parser:
         var_type = self.eat(TokenType.KEYWORD).value 
         name = self.eat(TokenType.IDENTIFIER).value
         initializer = None 
-        if self.current().type() == TokenType.ASSIGN:
+        if self.current().type == TokenType.ASSIGN:
             self.eat(TokenType.ASSIGN)
             initializer = self.parse_expression()
         self.eat(TokenType.SEMICOLON)
@@ -164,10 +171,10 @@ class Parser:
         return IfStatement(condition,then_body,else_body)
     
     def parse_while(self):
-        self.eat(TokenType.KEYWORD,"else")
+        self.eat(TokenType.KEYWORD,"while")
         self.eat(TokenType.LPAREN)
         condition = self.parse_expression()
-        self.eat(TokenType.RBRACE)
+        self.eat(TokenType.RPAREN)
         self.eat(TokenType.LBRACE)
         body = self.parse_block()
         self.eat(TokenType.RBRACE)
@@ -203,12 +210,13 @@ class Parser:
         return left
 
     def parse_additive(self):
-        left = self.parse_primary()
-        while self.current().type == TokenType.NUMBER:
+        left = self.parse_multiplicative()
+        while self.current().type in (TokenType.PLUS, TokenType.MINUS):
             op = self.eat(self.current().type).value
-            right=self.parse_multiplicative()
-            left = BinaryOp(left,op,right)
+            right = self.parse_multiplicative()
+            left = BinaryOp(left, op, right)
         return left
+
     
     def parse_multiplicative(self):
         left = self.parse_primary()
