@@ -109,4 +109,68 @@ class Parser:
             statements.append(self.parse_statement())
         return statements
 
+    def parse_statement(self):
+        token = self.current()
+
+        if token.type == TokenType.KEYWORD and token.value in ("int","value"):
+            return self.parse_var_declaration()
+        
+        if token.type == TokenType.KEYWORD and token.value == "return":
+            return self.parse_return()
+        
+        if token.type == TokenType.KEYWORD and token.value == "if":
+            return self.parse_if()
+
+        if token.type == TokenType.KEYWORD and token.value == "while":
+            return self.parse_while()
+
+        if token.type == TokenType.IDENTIFIER:
+            return self.parse_assignment_or_call()
+
+        raise SyntaxError(f"Unexpected Token '{token.value} at line {token.line}")
+
+    def parse_var_declaration(self):
+        var_type = self.eat(TokenType.KEYWORD).value 
+        name = self.eat(TokenType.IDENTIFIER).value
+        initializer = None 
+        if self.current().type() == TokenType.ASSIGN:
+            self.eat(TokenType.ASSIGN)
+            initializer = self.parse_expression()
+        self.eat(TokenType.SEMICOLON)
+        return VarDeclaration(var_type,name,initializer)
+    
+    def parse_return(self):
+        self.eat(TokenType.KEYWORD,"return")
+        expr = None 
+        if self.current().type != TokenType.SEMICOLON:
+            expr = self.parse_expression()
+        self.eat(TokenType.SEMICOLON)
+        return ReturnStatement(expr)
+    
+    def parse_if(self):
+        self.eat(TokenType.KEYWORD,"if")
+        self.eat(TokenType.LPAREN)
+        condition = self.parse_expression()
+        self.eat(TokenType.RPAREN)
+        self.eat(TokenType.LBRACE)
+        then_body = self.parse_block()
+        self.eat(TokenType.RBRACE)
+        else_body=[]
+        if self.current().type == TokenType.KEYWORD and self.current().value == "else":
+            self.eat(TokenType.KEYWORD,"else")
+            self.eat(TokenType.LBRACE)
+            else_body = self.parse_block()
+            self.eat(TokenType.RBRACE)
+        return IfStatement(condition,then_body,else_body)
+    
+    def parse_while(self):
+        self.eat(TokenType.KEYWORD,"else")
+        self.eat(TokenType.LPAREN)
+        condition = self.parse_expression()
+        self.eat(TokenType.RBRACE)
+        self.eat(TokenType.LBRACE)
+        body = self.parse_block()
+        self.eat(TokenType.RBRACE)
+        return WhileStatement(condition,body)
+
     
