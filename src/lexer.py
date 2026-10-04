@@ -41,7 +41,7 @@ KEYWORDS = ["int" , "if" , "else" , "while" , "return","void"]
 
 
 class Lexer:
-    def __init__(self,source)
+    def __init__(self,source):
         self.source = source
         self.pos = 0
         self.line = 1
@@ -88,7 +88,7 @@ class Lexer:
     
     def read_number(self):
         start = self.pos
-        while self.current_char() and (self.current_char().isalnum() or self.current_char()=='_'):
+        while self.current_char() and (self.current_char().isdigit() or self.current_char()=='_'):
             self.advance()
         return self.source[start:self.pos]
 
@@ -112,7 +112,7 @@ class Lexer:
                 if word in KEYWORDS:
                     self.tokens.append(Token(TokenType.KEYWORD,word,self.line))
                 else :
-                    self.token.append(Token(TokenType.IDENTIFIER,word,self.line))
+                    self.tokens.append(Token(TokenType.IDENTIFIER,word,self.line))
 
             elif char == '=' and self.pos + 1 < len(self.source) and self.source[self.pos+1] == '=':
                 self.tokens.append(Token(TokenType.EQ,'==',self.line))
