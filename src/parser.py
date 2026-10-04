@@ -173,4 +173,76 @@ class Parser:
         self.eat(TokenType.RBRACE)
         return WhileStatement(condition,body)
 
+    def parse_assignment_or_call(self):
+        name = self.eat(TokenType.IDENTIFIER).value
+        if self.current().type == TokenType.LPAREN:
+            self.eat(TokenType.LPAREN)
+            args = []
+            if self.current().type != TokenType.RPAREN:
+                args.append(self.parse_expression())
+                while self.current().type != TokenType.RPAREN:
+                    self.eat(TokenType.COMMA)
+                    args.append(self.parse_expression())
+            self.eat(TokenType.RPAREN)
+            self.eat(TokenType.SEMICOLON)
+            return FunctionCall(name,args)
+        self.eat(TokenType.ASSIGN)
+        expr = self.parse_expression()
+        self.eat(TokenType.SEMICOLON)
+        return Assignment(name,expr)
+
+    def parse_expression(self):
+        return self.parse_comparision()
+
+    def parse_comparision(self):
+        left=self.parse_additive()
+        while self.current().type in (TokenType.EQ,TokenType.NEQ,TokenType.LT,TokenType.GT,TokenType.LE):
+            op = self.eat(self.current().type).value
+            right = self.parse_additive()
+            left = BinaryOp(left,op,right)
+        return left
+
+    def parse_additive(self):
+        left = self.parse_primary()
+        while self.current().type == TokenType.NUMBER:
+            op = self.eat(self.current().type).value
+            right=self.parse_multiplicative()
+            left = BinaryOp(left,op,right)
+        return left
     
+    def parse_multiplicative(self):
+        left = self.parse_primary()
+        while self.current().type in (TokenType.STAR,TokenType.SLASH):
+            op = self.eat(self.current().type).value
+            right = self.parse_primary()
+            left = BinaryOp(left,op,right)
+        return left
+
+    def parse_primary(self):
+        token = self.current()
+        # Number literal
+        if token.type == TokenType.NUMBER:
+            self.eat(TokenType.NUMBER)
+            return NumberLiteral(int(token.value))
+        # Identifier or function call in expression
+        if token.type == TokenType.IDENTIFIER:
+            self.eat(TokenType.IDENTIFIER)
+            if self.current().type == TokenType.LPAREN:
+                self.eat(TokenType.LPAREN)
+                args = []
+                if self.current().type != TokenType.RPAREN:
+                    args.append(self.parse_expression())
+                    while self.current().type == TokenType.COMMA:
+                        self.eat(TokenType.COMMA)
+                        args.append(self.parse_expression())
+                self.eat(TokenType.RPAREN)
+                return FunctionCall(token.value, args)
+            return Identifier(token.name if hasattr(token, 'name') else token.value)
+        # Parenthesized expression
+        if token.type == TokenType.LPAREN:
+            self.eat(TokenType.LPAREN)
+            expr = self.parse_expression()
+            self.eat(TokenType.RPAREN)
+            return expr
+        raise SyntaxError(f"Unexpected token '{token.value}' at line {token.line}")
+                            
