@@ -29,7 +29,7 @@ class VarDeclaration :
     initializer : object = None
 
 @dataclass
-class FunctionnCall : 
+class FunctionCall : 
     name : str
     args : list 
 
@@ -43,4 +43,19 @@ class FunctionDeclaration :
 @dataclass
 class Program : 
     functions : list 
-    
+
+@dataclass 
+class ReturnStatement :
+    expr : object 
+
+@dataclass
+class IfStatement:
+    condition : object
+    then_body : list 
+    else_body : list =field(default_factory=list)
+
+@dataclass
+class WhileStatement:
+    condition : object 
+    body : list 
+
