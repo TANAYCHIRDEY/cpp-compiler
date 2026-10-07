@@ -26,7 +26,8 @@ def compile_cpp(source_code):
 
     # Phase 4: Execute!
     print("\n=== OUTPUT ===")
-    exec(python_code)
+    namespace = {"__name__": "__main__"}
+    exec(python_code, namespace)
 
 
 def main():

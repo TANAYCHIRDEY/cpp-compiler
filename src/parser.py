@@ -92,7 +92,7 @@ class Parser:
         self.eat(TokenType.RPAREN)
         self.eat(TokenType.LBRACE)
         body = self.parse_block()
-        body=self.eat(TokenType.RBRACE)
+        self.eat(TokenType.RBRACE)
         return FunctionDeclaration(return_type,name,params,body)
     
     def parse_params(self):

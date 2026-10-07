@@ -1,8 +1,31 @@
-build/
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+*.egg
+
+# Virtual environments
+venv/
+env/
+.env/
+
+# IDE
 .vs/
 .vscode/
 .idea/
 *.user
 *.suo
-CMakeSettings.json
+
+# C++ build
+build/
 out/
+CMakeSettings.json
+*.o
+*.obj
+*.exe
+
+# OS
+Thumbs.db
+.DS_Store
